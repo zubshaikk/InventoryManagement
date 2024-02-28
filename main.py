@@ -109,21 +109,42 @@ def view_all_items():
 
                 # Entry fields to update item details
                 tk.Label(update_window, text='Quantity').pack()
-                quantity_var_update = tk.IntVar(value=item_values[2])  
+                quantity_var_update = tk.StringVar(value=item_values[2])  
                 quantity_entry_update = tk.Entry(update_window, textvariable=quantity_var_update)
                 quantity_entry_update.pack()
 
                 tk.Label(update_window, text='Price').pack()
-                price_var_update = tk.DoubleVar(value=item_values[3]) 
+                price_var_update = tk.StringVar(value=item_values[3]) 
                 price_entry_update = tk.Entry(update_window, textvariable=price_var_update)
                 price_entry_update.pack()
 
                 # Update functionality
                 def update_item_details():
-                    update_item(conn, (quantity_var_update.get(), price_var_update.get(), item_values[0]))  # ID is passed here
-                    update_window.destroy()
-                    new_window.destroy()  # Refresh list by destroying and reopening
-                    view_all_items()
+                    try:
+                        new_quantity = int(quantity_var_update.get())
+                        if new_quantity < 0:  # Check for non-negative values
+                            raise ValueError("Quantity should be non-negative.")
+                    except ValueError:
+                        messagebox.showerror("Error", "Quantity should be a non-negative integer.")
+                        return  # Stop execution if there's an error
+
+                    try:
+                        new_price = float(price_var_update.get())
+                        if new_price < 0.0:  # Check for non-negative values
+                            raise ValueError("Price should be non-negative.")
+                    except ValueError:
+                        messagebox.showerror("Error", "Price should be a non-negative number.")
+                        return  # Stop execution if there's an error
+
+                    # Proceed with updating the item in the database
+                    try:
+                        update_item(conn, (new_quantity, new_price, item_values[0]))  # Use the actual item ID
+                        update_window.destroy()
+                        new_window.destroy()  # Refresh list by destroying and reopening
+                        view_all_items()
+                    except Exception as e:
+                        messagebox.showerror("Error", f"Failed to update item in database: {e}")
+
 
                 # Delete functionality
                 def delete_item_details():
